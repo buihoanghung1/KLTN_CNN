@@ -37,12 +37,3 @@ Sau khi server chạy, truy cập vào trình duyệt tại địa chỉ: `http:
 | **Recall (Worms)** | 12% | **85%** |
 | **Báo động giả (False Alarm)**| Thấp | **Rất thấp (Gần 0%)** |
 
-## Cấu trúc thư mục
-```text
-KHOALUANCNN
- |-- artifacts/               # Lưu trữ file cấu hình chuẩn hóa (scaler.pkl, feature_encoders.pkl)
- |-- data_train/              # Lưu trữ file mô hình đã huấn luyện (Final_IDS_Model.h5)
- |-- templates/               # Giao diện HTML (index.html, result.html)
- |-- uploads/                 # Thư mục tạm lưu trữ file CSV người dùng tải lên
- |-- app.py                   # Source code Backend Web App (Flask)
- |-- README.md                # Tài liệu giới thiệu dự án
