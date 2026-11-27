@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kết Quả Phân Tích IDS</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #f8f9fa; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        .header-result { background: white; padding: 20px; border-bottom: 1px solid #dee2e6; margin-bottom: 30px; box-shadow: 0 2px 15px rgba(0,0,0,0.05); }
+        .card { border-radius: 12px; border: none; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; transition: transform 0.2s; }
+        .card:hover { transform: translateY(-2px); }
+        .chart-container { position: relative; height: 350px; width: 100%; display: flex; justify-content: center; }
+        
+        /* Custom Table Style */
+        .table-responsive { max-height: 500px; overflow-y: auto; }
+        table { width: 100%; font-size: 0.9rem; }
+        thead { position: sticky; top: 0; background: #fff; z-index: 1; }
+    </style>
+</head>
+<body>
+    <div class="header-result d-flex justify-content-between align-items-center px-4">
+        <div class="d-flex align-items-center">
+            <span class="h3 text-primary m-0 me-2"></span>
+            <h3 class="text-primary m-0 fw-bold">Báo Cáo Phân Tích Mạng</h3>
+        </div>
+        <a href="/" class="btn btn-outline-primary rounded-pill px-4">
+            <span class="me-1">←</span> Quét file khác
+        </a>
+    </div>
+
+    <div class="container pb-5">
+        <div class="row mb-4">
+            <div class="col-lg-5 mb-4 mb-lg-0">
+                <div class="card h-100 p-4">
+                    <h5 class="card-title text-center fw-bold text-secondary mb-4">PHÂN BỐ LOẠI TẤN CÔNG</h5>
+                    <div class="chart-container">
+                        <canvas id="attackChart"></canvas>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-lg-7">
+                <div class="card h-100 p-4">
+                    <h5 class="card-title text-center fw-bold text-secondary mb-4">THỐNG KÊ CHI TIẾT</h5>
+                    <div class="row g-3" id="statsGrid">
+                        </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card p-4">
+            <h5 class="card-title fw-bold text-secondary mb-3">📋 Chi tiết 100 gói tin đầu tiên</h5>
+            <div class="table-responsive border rounded">
+                {{ table|safe }}
+            </div>
+        </div>
+    </div>
+<script>
+        // 1. NHẬN DỮ LIỆU
+        const stats = {{ stats | tojson | safe }}; 
+        const labels = Object.keys(stats);
+        const data = Object.values(stats);
+
+        // 2. BẢNG MÀU 
+        const colorMap = {
+            'normal': '#2ecc71',         // Xanh lá (An toàn)
+            'generic': '#34495e',        // Xám xanh đậm
+            'exploits': '#e67e22',       // Cam
+            'fuzzers': '#9b59b6',        // Tím
+            'dos': '#e74c3c',            // Đỏ tươi
+            'reconnaissance': '#f1c40f', // Vàng
+            'analysis': '#1abc9c',       // Xanh ngọc
+            'backdoor': '#c0392b',       // Đỏ đậm
+            'shellcode': '#ff7979',      // Hồng san hô
+            'worms': '#8e44ad'           // Tím than
+        };
+
+        // Hàm lấy màu thông minh 
+        const getColor = (label) => {
+            if (!label) return '#95a5a6'; // Trả về xám nếu nhãn rỗng
+            const cleanLabel = label.toString().toLowerCase().trim();
+            return colorMap[cleanLabel] || '#95a5a6'; // Mặc định xám nếu không tìm thấy
+        };
+
+        // Tạo danh sách màu cho biểu đồ
+        const backgroundColors = labels.map(label => getColor(label));
+
+        // 3. VẼ BIỂU ĐỒ TRÒN
+        const ctx = document.getElementById('attackChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'doughnut',
+            data: {
+                labels: labels,
+                datasets: [{
+                    data: data,
+                    backgroundColor: backgroundColors,
+                    hoverOffset: 4,
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false 
+                    }
+                }
+            }
+        });
+
+        // 4. TẠO GRID THỐNG KÊ
+        const grid = document.getElementById('statsGrid');
+        
+        labels.forEach((label, index) => {
+            const count = data[index];
+            const color = backgroundColors[index]; 
+            
+            const col = document.createElement('div');
+            col.className = 'col-sm-6 col-md-4'; // Chia cột: Mobile 2 cột, PC 3 cột
+            
+            col.innerHTML = `
+                <div class="p-3 rounded border text-center h-100 d-flex flex-column justify-content-center" 
+                     style="background-color: ${color}10; border-color: ${color}40 !important;">
+                    <div class="fw-bold text-uppercase mb-1" style="color: ${color}; font-size: 0.8rem; letter-spacing: 1px;">
+                        ${label}
+                    </div>
+                    <div class="h3 m-0 fw-bold" style="color: ${color};">
+                        ${count}
+                    </div>
+                </div>
+            `;
+            grid.appendChild(col);
+        });
+    </script>
